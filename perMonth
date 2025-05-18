@@ -1,0 +1,17 @@
+SELECT COUNT(dd.workorderid), DATE(TO_TIMESTAMP(dd.createdtime/1000)) as day
+FROM WorkOrder dd 
+LEFT JOIN WorkOrderStates wos ON dd.WORKORDERID = wos.WORKORDERID 
+LEFT JOIN SDUser td ON wos.OWNERID = td.USERID 
+LEFT JOIN AaaUser ti ON td.USERID = ti.USER_ID 
+LEFT JOIN StatusDefinition std ON wos.STATUSID = std.STATUSID 
+LEFT JOIN WorkOrder_Queue woq ON dd.WORKORDERID = woq.WORKORDERID 
+LEFT JOIN QueueDefinition qd ON woq.QUEUEID = qd.QUEUEID 
+LEFT JOIN ModeDefinition mdd ON dd.MODEID = mdd.MODEID
+WHERE dd.createdtime BETWEEN 
+            (EXTRACT(EPOCH FROM DATE_TRUNC('month', NOW()) AT TIME ZONE 'UTC') * 1000)
+            AND 
+            (EXTRACT(EPOCH FROM DATE_TRUNC('month', NOW() + INTERVAL '1 month') AT TIME ZONE 'UTC') * 1000)
+            AND
+            qd.QUEUENAME = 'Первая линия'
+GROUP BY day
+ORDER BY MIN(TO_TIMESTAMP(dd.createdtime/1000) AT TIME ZONE 'UTC');
