@@ -1,0 +1,11 @@
+returnjson = Map();
+workorderid = requestObj.get("id");
+
+sendmail[
+	From: zoho.adminuser
+	to: requestObj.get("requester").get("email_id")
+	subject: "Заявка: " + workorderid
+	message:"Ваша заявка " + workorderid + " взята в работу"
+		]
+
+return returnjson;
