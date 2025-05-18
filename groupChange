@@ -1,0 +1,32 @@
+returnjson = Map();
+if(requestObj.containsKey("group"))
+{
+	if(requestObj.get("category").get("name") != requestObj.get("group").get("name"))
+ 	{
+ 		returnjson = {
+ 			"operation": [{
+ 				"INPUT_DATA": [{
+ 					"request": {
+						"category": {"name": requestObj.get("group").get("name")}
+ 					}
+ 				}], 
+ 				"OPERATIONNAME": "UPDATE", 
+ 				"FORMAT": "V3"
+ 			}], 
+ 		"result": "success", 
+	 	"message": "Request updated!!"
+ 		};
+ 	}
+	/*returnjson = {
+		"operation": [{
+ 				"INPUT_DATA": [{
+ 					"request": {}
+ 				}], 
+ 				"OPERATIONNAME": "", 
+ 				"FORMAT": ""
+ 			}], 
+ 		"result": "success", 
+	 	"message": "Request updated!!"
+	};*/
+}
+return returnjson;
