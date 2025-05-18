@@ -1,0 +1,13 @@
+start = zoho.currenttime.getHour();
+massSLA = requestObj.get("due_by_time");
+endSLA = massSLA.get("display_value").getHour();
+
+if (requestObj.get("group").get("name") == "Первая линия")
+{
+	if (massSLA.get("display_value").getDate() == zoho.currenttime.getDate() &&  (endSLA - massSLA <= 1))
+	{
+			return true;
+	}
+}
+
+return false;
