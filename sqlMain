@@ -1,0 +1,38 @@
+SELECT 
+    ti.FIRST_NAME AS "ФИО специалиста", 
+    SUM(CASE WHEN std.STATUSNAME IN ('В очереди', 'Заявка в работе') THEN 1 ELSE 0 END) AS "Открытые заявки", 
+    SUM(CASE WHEN wo.COMPLETEDTIME BETWEEN 
+    (EXTRACT(EPOCH FROM DATE_TRUNC('day', NOW()) AT TIME ZONE 'UTC' + INTERVAL '8 hours') * 1000)
+     AND 
+     (EXTRACT(EPOCH FROM DATE_TRUNC('day', NOW()) AT TIME ZONE 'UTC' + INTERVAL '19 hours') * 1000)
+             AND wo.COMPLETEDTIME NOT IN (0, -1) 
+             AND wo.COMPLETEDTIME IS NOT NULL 
+             AND std.STATUSNAME IN ('Завершено', 'Завершено автоматически', 'Завершено, ожидает обратной связи') THEN 1 ELSE 0 END) AS "Закрытые заявки",
+    SUM(CASE WHEN std.STATUSNAME IN ('В очереди', 'Заявка в работе') THEN 1 ELSE 0 END) + 
+    SUM(CASE WHEN wo.COMPLETEDTIME BETWEEN 
+    (EXTRACT(EPOCH FROM DATE_TRUNC('day', NOW()) AT TIME ZONE 'UTC' + INTERVAL '8 hours') * 1000)
+     AND 
+     (EXTRACT(EPOCH FROM DATE_TRUNC('day', NOW()) AT TIME ZONE 'UTC' + INTERVAL '19 hours') * 1000)
+             AND wo.COMPLETEDTIME NOT IN (0, -1) 
+             AND wo.COMPLETEDTIME IS NOT NULL 
+             AND std.STATUSNAME != 'cancelled' THEN 1 ELSE 0 END)  AS "Общее",
+    SUM(CASE WHEN std.STATUSNAME = 'Ожидается дополнительная информация' THEN 1 ELSE 0 END) AS "Ожидается информация"
+FROM WorkOrder wo 
+LEFT JOIN ModeDefinition mdd ON wo.MODEID = mdd.MODEID 
+LEFT JOIN SDUser sdu ON wo.REQUESTERID = sdu.USERID 
+LEFT JOIN AaaUser aau ON sdu.USERID = aau.USER_ID 
+LEFT JOIN WorkOrderStates wos ON wo.WORKORDERID = wos.WORKORDERID 
+LEFT JOIN SDUser td ON wos.OWNERID = td.USERID 
+LEFT JOIN AaaUser ti ON td.USERID = ti.USER_ID 
+LEFT JOIN StatusDefinition std ON wos.STATUSID = std.STATUSID 
+LEFT JOIN WorkOrder_Fields wof ON wo.WORKORDERID = wof.WORKORDERID 
+LEFT JOIN RequestResolver rrr ON wo.WORKORDERID = rrr.REQUESTID 
+LEFT JOIN RequestResolution rrs ON rrr.REQUESTID = rrs.REQUESTID 
+LEFT JOIN WorkOrderToDescription wotodesc ON wo.WORKORDERID = wotodesc.WORKORDERID 
+LEFT JOIN RequestClosureCode rcode ON wos.CLOSURECODEID = rcode.CLOSURECODEID 
+WHERE 
+    ((mdd.MODENAME NOT IN ('Массовая проблема, авария', 'Инцидент, массовая проблема') OR mdd.MODENAME IS NULL) 
+    AND ti.FIRST_NAME IN ('имена специалистов'))
+    AND wo.ISPARENT = '1'
+GROUP BY ti.LAST_NAME, ti.FIRST_NAME
+ORDER BY ti.LAST_NAME
