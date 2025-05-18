@@ -1,0 +1,24 @@
+returnjson = Map();
+dataObj = reportObj.get("отчет по заявкам пл, не закрытым и старым");
+
+for each data in dataObj{
+	status = data.get("status");
+}
+
+returnjson ={
+ 		"operation":
+		[{
+ 			"INPUT_DATA": 
+			[{
+ 				"request": 
+				{
+					"status": {"name": "В очереди"}
+ 				}
+ 			}], 
+ 			"OPERATIONNAME": "UPDATE", 
+ 			"FORMAT": "V3"
+ 		}], 
+ 	"result": "success", 
+	"message": "Requested!!"
+};
+return returnjson;
