@@ -1,0 +1,30 @@
+returnjson = Map();
+//email_id = "oleg.sidorenko@strana.com";
+workorderid = requestObj.get("id");
+endH = requestObj.get("due_by_time").get("display_value").getHour();
+endM = requestObj.get("due_by_time").get("display_value").getMinutes();
+totalEnd = (endH * 60) + endM;
+nowH = zoho.currenttime.getHour();
+nowM = zoho.currenttime.getMinutes();
+totalNow = (nowH * 60) + nowM;
+remainMin = totalEnd - totalNow;
+if (remainMin < 0){
+	sendmail[
+		From: zoho.adminuser
+		to: requestObj.get("technician").get("email_id")
+		subject: "Заявка: " + workorderid
+		message:"Заявка:  " +workorderid + "<br> Должна быть закрыта до: " + requestObj.get("due_by_time").get("display_value") + 
+		"<br>Заявка просрочена на: " + remainMin.abs() + " мин." + "<br />Ссылка на заявку: https://helpdesk.itstrana.site/WorkOrder.do?woMode=viewWO&woID=" + workorderid
+		]
+}
+else {
+	sendmail[
+		From: zoho.adminuser
+		to:  requestObj.get("technician").get("email_id")
+		subject: "Заявка: " + workorderid
+		message:"Заявка:  " +workorderid + "<br> Должна быть закрыта до: " + requestObj.get("due_by_time").get("display_value") + 
+		"<br>Осталось минут: " + remainMin + "<br />Ссылка на заявку: https://helpdesk.itstrana.site/WorkOrder.do?woMode=viewWO&woID=" + workorderid
+		]
+}
+
+return returnjson;
