@@ -1,0 +1,14 @@
+SELECT scd.NAME AS Подкатегория, icd.NAME AS Позиция, COUNT(wo.WORKORDERID) AS Количество
+FROM WorkOrder wo 
+LEFT JOIN WorkOrderStates wos ON wo.WORKORDERID=wos.WORKORDERID 
+LEFT JOIN SubCategoryDefinition scd ON wos.SUBCATEGORYID=scd.SUBCATEGORYID 
+LEFT JOIN ItemDefinition icd ON wos.ITEMID=icd.ITEMID 
+LEFT JOIN WorkOrder_Queue woq ON wo.WORKORDERID=woq.WORKORDERID 
+LEFT JOIN QueueDefinition qd ON woq.QUEUEID=qd.QUEUEID
+WHERE  (( qd.QUEUENAME = 'Первая линия' ) 
+AND ( ( ( wo.CREATEDTIME >= (EXTRACT(EPOCH FROM DATE_TRUNC('day', NOW()) AT TIME ZONE 'UTC' + INTERVAL '8 hours') * 1000) ) 
+AND ( ( wo.CREATEDTIME != 0 ) AND ( wo.CREATEDTIME IS NOT NULL ) ) ) 
+AND ( ( wo.CREATEDTIME <= (EXTRACT(EPOCH FROM DATE_TRUNC('day', NOW()) AT TIME ZONE 'UTC' + INTERVAL '19 hours') * 1000) ) 
+AND ( ( wo.CREATEDTIME != -1 ) ) ) ))  AND wo.ISPARENT='1'
+GROUP BY Позиция, Подкатегория
+ORDER BY Количество DESC, Подкатегория, Позиция;
