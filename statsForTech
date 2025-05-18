@@ -1,0 +1,41 @@
+SELECT 
+    ti.FIRST_NAME AS ФИО, 
+    COUNT(CASE 
+        WHEN dd.COMPLETEDTIME BETWEEN 
+            (EXTRACT(EPOCH FROM DATE_TRUNC('week', NOW()) AT TIME ZONE 'UTC') * 1000)
+            AND 
+            (EXTRACT(EPOCH FROM DATE_TRUNC('week', NOW()) AT TIME ZONE 'UTC' + INTERVAL '7 days') * 1000)
+        THEN dd.WORKORDERID 
+    END) AS Неделя, 
+    COUNT(CASE 
+        WHEN dd.COMPLETEDTIME BETWEEN 
+            (EXTRACT(EPOCH FROM DATE_TRUNC('month', NOW()) AT TIME ZONE 'UTC') * 1000)
+            AND 
+            (EXTRACT(EPOCH FROM DATE_TRUNC('month', NOW()) AT TIME ZONE 'UTC' + INTERVAL '1 month') * 1000)
+        THEN dd.WORKORDERID 
+    END) AS Месяц, 
+    COUNT(CASE 
+        WHEN dd.COMPLETEDTIME BETWEEN 
+            (EXTRACT(EPOCH FROM DATE_TRUNC('year', NOW()) AT TIME ZONE 'UTC') * 1000)
+            AND 
+            (EXTRACT(EPOCH FROM DATE_TRUNC('year', NOW()) AT TIME ZONE 'UTC' + INTERVAL '1 year') * 1000)
+        THEN dd.WORKORDERID 
+    END) AS Год
+FROM WorkOrder dd 
+LEFT JOIN WorkOrderStates wos ON dd.WORKORDERID = wos.WORKORDERID 
+LEFT JOIN SDUser td ON wos.OWNERID = td.USERID 
+LEFT JOIN AaaUser ti ON td.USERID = ti.USER_ID 
+LEFT JOIN StatusDefinition std ON wos.STATUSID = std.STATUSID 
+LEFT JOIN WorkOrder_Queue woq ON dd.WORKORDERID = woq.WORKORDERID 
+LEFT JOIN QueueDefinition qd ON woq.QUEUEID = qd.QUEUEID 
+LEFT JOIN ModeDefinition mdd ON dd.MODEID = mdd.MODEID
+WHERE  
+    qd.QUEUENAME = 'Первая линия' 
+    AND std.STATUSNAME IN ('Завершено', 'Завершено автоматически', 'Завершено, ожидает обратной связи') 
+    AND (mdd.MODENAME NOT IN ('Массовая проблема, авария', 'Инцидент, массовая проблема') OR mdd.MODENAME IS NULL)
+    AND ti.FIRST_NAME IN ( 
+        'Имена специалистов'        
+    )
+    AND dd.ISPARENT = '1' 
+GROUP BY ti.FIRST_NAME
+ORDER BY Неделя DESC;
